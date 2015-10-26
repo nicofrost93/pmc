@@ -19,6 +19,8 @@ namespace VoxData
     /// <summary>
     /// Lógica de interacción para MainWindow.xaml
     /// </summary>
+    /// 
+
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -26,8 +28,20 @@ namespace VoxData
             InitializeComponent();
         }
 
+        private WaveIn sStream = null;
+        private DirectSoundOut sOut = null;
+
         private void button_Click(object sender, RoutedEventArgs e)
         {
+            sStream = new WaveIn();
+            sStream.DeviceNumber = 0;
+            sStream.WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels);
+
+            WaveInProvider wip = new WaveInProvider(sStream);
+            sStream.StartRecording();
+
+            mainV.Background = new SolidColorBrush(Colors.Green);
+        
 
         }
     }

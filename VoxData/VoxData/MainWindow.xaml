@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VoxData"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
+    <Grid x:Name="mainV" >
         <Button x:Name="button" Content="Start" Height="69" Margin="158,79.5,180.5,0" 
                 VerticalAlignment="Top" FontSize="48" Click="button_Click"/>
         <TextBlock x:Name="textBlock" Height="43.5" Margin="158,0,114.5,65.5" 

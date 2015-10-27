@@ -30,18 +30,50 @@ namespace VoxData
 
         private WaveIn sStream = null;
         private DirectSoundOut sOut = null;
-
+        private BufferedWaveProvider buffer;
+        private AsioOut input;
+        private AsioOut output;
+        
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            sStream = new WaveIn();
-            sStream.DeviceNumber = 0;
-            sStream.WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels);
+            //input = new AsioOut(RecordInCbox.SelectedIndex);
+            //WaveFormat format = new WaveFormat();
+            //buffer = new BufferedWaveProvider(format);
+            //buffer.DiscardOnBufferOverflow = true;
+            //input.InitRecordAndPlayback(buffer, 1, 44100);
+            //input.AudioAvailable += new EventHandler<AsioAudioAvailableEventArgs>(AudioAvailable);
 
-            WaveInProvider wip = new WaveInProvider(sStream);
-            sStream.StartRecording();
+            ////output = new AsioOut(RecordInCbox.SelectedIndex);
+            ////output.Init(buffer);
 
-            mainV.Background = new SolidColorBrush(Colors.Green);
-        
+            //input.Play();
+            ////output.Play();
+
+            if (sStream == null)
+            {
+                sStream = new WaveIn();
+                sStream.BufferMilliseconds = 50;
+                sStream.DeviceNumber = 0;
+                sStream.WaveFormat = new WaveFormat(44100, WaveIn.GetCapabilities(0).Channels);
+                sStream.DataAvailable += SStream_DataAvailable;
+
+                WaveInProvider wip = new WaveInProvider(sStream);
+
+                sStream.StartRecording();
+
+
+                mainV.Background = new SolidColorBrush(Colors.Green);
+            }
+            else 
+            {
+                sStream.StopRecording();
+                mainV.Background = new SolidColorBrush(Colors.Aqua);
+            }
+
+        }
+
+        private void SStream_DataAvailable(object sender, WaveInEventArgs e)
+        {
 
         }
     }

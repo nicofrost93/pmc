@@ -12,6 +12,7 @@
         <TextBlock x:Name="textBlock" Height="43.5" Margin="158,0,114.5,65.5" 
                    TextWrapping="Wrap" VerticalAlignment="Bottom" FontSize="18.667" 
                    Text="&lt;&lt;Esperando audio&gt;&gt;"/>
+        <Button x:Name="button1" Content="Grabar" Margin="158,0,180.5,65.5" FontSize="48" Click="button1_Click" Height="69.5" VerticalAlignment="Bottom"/>
 
     </Grid>
 </Window>

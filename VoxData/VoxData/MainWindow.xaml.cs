@@ -1,4 +1,6 @@
-﻿using NAudio.Wave;
+﻿using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
+using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -35,6 +38,10 @@ namespace VoxData
         RecordingState recordingState;
         WaveFileWriter writer;
         WaveFormat recordingFormat;
+        private IAudioRecorder recorder;
+
+        private RelayCommand beginRecordingCommand;
+        private RelayCommand stopCommand;
 
         public event EventHandler Stopped = delegate { };
 
@@ -44,7 +51,16 @@ namespace VoxData
             InitializeComponent();
             sampleAggregator = new SampleAggregator();
             RecordingFormat = new WaveFormat(44100, 1);
+            //this.recorder = recorder;
+            //this.recorder.Stopped += new EventHandler(recorder_Stopped);
+   
+            this.stopCommand = new RelayCommand(() => Stop(),() => true);
+
         }
+        //void recorder_Stopped(object sender, EventArgs e)
+        //{
+        //    Messenger.Default.Send(new NavigateMessage(SaveViewModel.ViewName, new VoiceRecorderState(waveFileName, null)));
+        //}
 
 
         //Get-Set RecordingFormat
@@ -79,6 +95,19 @@ namespace VoxData
             recordingState = RecordingState.Monitoring;
         }
 
+
+        public void BeginRecording(string waveFileName)
+        {
+
+
+            if (recordingState != RecordingState.Monitoring)
+            {
+                throw new InvalidOperationException("Can't begin recording while we are in this state: " + recordingState.ToString());
+            }
+            writer = new WaveFileWriter(waveFileName, recordingFormat);
+            recordingState = RecordingState.Recording;
+        }
+
         void waveIn_RecordingStopped(object sender, EventArgs e)
         {
             recordingState = RecordingState.Stopped;
@@ -91,6 +120,7 @@ namespace VoxData
         {
             byte[] buffer = e.Buffer;
             int bytesRecorded = e.BytesRecorded;
+            Console.WriteLine(bytesRecorded);
             WriteToFile(buffer, bytesRecorded);
 
             for (int index = 0; index < e.BytesRecorded; index += 2)
@@ -99,6 +129,8 @@ namespace VoxData
                                         buffer[index + 0]);
                 float sample32 = sample / 32768f;
                 sampleAggregator.Add(sample32);
+                Console.WriteLine(sample32);
+
             }
         }
 
@@ -137,14 +169,22 @@ namespace VoxData
         private void button_Click(object sender, RoutedEventArgs e)
         {
             BeginMonitoring(0);
+            BeginRecording("C:\\Users\\Usuario\\Desktop\\pm\\nombre.wav");
+            Timer t = new Timer(1000);
+            t.Disposed += T_Disposed;
 
             mainV.Background = new SolidColorBrush(Colors.Green);
 
         }
 
+        private void T_Disposed(object sender, EventArgs e)
+        {
+            Stop();
+        }
+
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-         
+           
         }
     }
 
@@ -684,6 +724,96 @@ namespace VoxData
 
     }
 
+    public interface IAudioRecorder
+    {
+        void BeginMonitoring(int recordingDevice);
+        void BeginRecording(string path);
+        void Stop();
+        double MicrophoneLevel { get; set; }
+        RecordingState RecordingState { get; }
+        SampleAggregator SampleAggregator { get; }
+        event EventHandler Stopped;
+        WaveFormat RecordingFormat { get; set; }
+        TimeSpan RecordedTime { get; }
+    }
+    class NavigateMessage
+    {
+        public string TargetView { get; private set; }
+        public object State { get; private set; }
+
+        public NavigateMessage(string targetView, object state)
+        {
+            this.TargetView = targetView;
+            this.State = state;
+        }
+    }
+
+    class VoiceRecorderState
+    {
+        private string recordingFileName;
+        private string effectedFileName;
+
+        public VoiceRecorderState(string recordingFileName, string effectedFileName)
+        {
+            this.RecordingFileName = recordingFileName;
+            this.EffectedFileName = effectedFileName;
+        }
+
+        public string RecordingFileName
+        {
+            get
+            {
+                return recordingFileName;
+            }
+            set
+            {
+                if ((recordingFileName != null) && (recordingFileName != value))
+                {
+                    DeleteFile(recordingFileName);
+                }
+                this.recordingFileName = value;
+            }
+        }
+
+        public string EffectedFileName
+        {
+            get
+            {
+                return effectedFileName;
+            }
+            set
+            {
+                if ((effectedFileName != null) && (effectedFileName != value))
+                {
+                    DeleteFile(effectedFileName);
+                }
+                this.effectedFileName = value;
+            }
+        }
+
+        public string ActiveFile
+        {
+            get
+            {
+                    return EffectedFileName;
+            }
+        }
+
+
+        public void DeleteFiles()
+        {
+            this.RecordingFileName = null;
+            this.EffectedFileName = null;
+        }
+
+        private void DeleteFile(string fileName)
+        {
+            if (!String.IsNullOrEmpty(fileName) && File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
 
 
 
